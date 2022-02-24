@@ -16,7 +16,50 @@ namespace CampgroundReservations.DAO
 
         public int CreateReservation(int siteId, string name, DateTime fromDate, DateTime toDate)
         {
-            throw new NotImplementedException();
+            int newReservation = 0;
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("INSERT INTO reservation (site_id, name, from_date, to_date) " +
+                                                "OUTPUT INSERTED.reservation_id " +
+                                                "VALUES (@site_id, @name, @from_date, @to_date);", conn);
+                                                
+
+                cmd.Parameters.AddWithValue("@site_id", siteId);
+                cmd.Parameters.AddWithValue("@name", name);
+                cmd.Parameters.AddWithValue("@from_date", fromDate);
+                cmd.Parameters.AddWithValue("@to_date", toDate);
+
+                newReservation = Convert.ToInt32(cmd.ExecuteScalar());
+            }
+            return newReservation;
+        }
+
+        public IList<Reservation> UpcomingReservation(int parkId)
+        {
+            IList<Reservation> upcomingReservations = new List<Reservation>();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("SELECT * FROM reservation r " +
+                                                "JOIN site s ON s.site_id = r.site_id " +
+                                                "JOIN campground c ON c.campground_id = s.campground_id " +
+                                                "WHERE c.park_id = @park_id AND r.from_date BETWEEN GETDATE() AND DATEADD(d,+30,GETDATE());", conn);
+
+                cmd.Parameters.AddWithValue("@park_id", parkId);
+
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    Reservation upcomingReservation = GetReservationFromReader(reader);
+                    upcomingReservations.Add(upcomingReservation);
+                }
+                
+            }
+            return upcomingReservations;
         }
 
         private Reservation GetReservationFromReader(SqlDataReader reader)
