@@ -23,13 +23,13 @@ namespace CampgroundReservations.Tests.DAO
         }
 
         [TestMethod]
-        public void GetSitesAvaliableTest()
+        public void GetSitesAvailableTest()
         {
             // Arrange
             SiteSqlDao dao = new SiteSqlDao(ConnectionString);
 
             // Act
-            IList<Site> availableSites = dao.GetSitesAvaliable(ParkId);
+            IList<Site> availableSites = dao.GetSitesAvailable(ParkId);
 
             // Assert
             Assert.AreEqual(availableSites.Count, 2);
