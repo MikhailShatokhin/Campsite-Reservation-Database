@@ -62,6 +62,34 @@ namespace CampgroundReservations.DAO
             return upcomingReservations;
         }
 
+        //Bonus Question #2
+        public IList<Reservation> GetFureSitesAvaliable(int parkId, DateTime fromDate, DateTime todate)
+        {
+            IList<Reservation> futureAvailableSites = new List<Reservation>();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("SELECT * FROM site s " +
+                                                "JOIN campground c ON c.campground_id = s.campground_id " +
+                                                "JOIN reservation r ON r.site_id = s.site_id " +
+                                                "WHERE c.park_id = @park_id AND GETDATE()+1 NOT BETWEEN r.from_date AND r.to_date;", conn);
+                //"GROUP BY s.site_id, s.campground_id, s.max_occupancy, s.max_rv_length, s.accessible, s.site_number, s.utilities " +
+                //"ORDER BY s.site_id;", conn);                                            
+
+                cmd.Parameters.AddWithValue("@park_id", parkId);
+
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    Reservation futureAvaliableSite = GetReservationFromReader(reader);
+                    futureAvailableSites.Add(futureAvaliableSite);
+                }
+            }
+            return futureAvailableSites;
+        }
+
         private Reservation GetReservationFromReader(SqlDataReader reader)
         {
             Reservation reservation = new Reservation();

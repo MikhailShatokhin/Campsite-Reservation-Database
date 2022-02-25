@@ -42,6 +42,62 @@ namespace CampgroundReservations.DAO
             throw new NotImplementedException();
         }
 
+        ////Bonus Question #1
+        //public IList<Site> GetSitesAvaliable(int parkId)
+        //{
+        //    IList<Site> availableSites = new List<Site>();
+
+        //    using (SqlConnection conn = new SqlConnection(connectionString))
+        //    {
+        //        conn.Open();
+        //        SqlCommand cmd = new SqlCommand("SELECT * FROM site s " +
+        //                                        "JOIN campground c ON c.campground_id = s.campground_id " +
+        //                                        "JOIN reservation r ON r.site_id = s.site_id " +
+        //                                        "WHERE c.park_id = @park_id AND GETDATE()+1 NOT BETWEEN r.from_date AND r.to_date;", conn);
+        //                                        //"GROUP BY s.site_id, s.campground_id, s.max_occupancy, s.max_rv_length, s.accessible, s.site_number, s.utilities " +
+        //                                        //"ORDER BY s.site_id;", conn);                                            
+
+        //        cmd.Parameters.AddWithValue("@park_id", parkId);
+
+        //        SqlDataReader reader = cmd.ExecuteReader();
+
+        //        while (reader.Read())
+        //        {
+        //            Site avaliableSite = GetSiteFromReader(reader);
+        //            availableSites.Add(avaliableSite);
+        //        }
+        //    }
+        //    return availableSites;
+        //}
+
+        //Bonus Question #1
+        public IList<Site> GetSitesAvaliable(int parkId)
+        {
+            IList<Site> availableSites = new List<Site>();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("SELECT * FROM site s " +
+                                                "WHERE s.site_id " +
+                                                "NOT IN (SELECT s.site_id FROM site s " +
+                                                "JOIN campground c ON c.campground_id = s.campground_id " +
+                                                "JOIN reservation r ON r.site_id = s.site_id WHERE park_id = @park_id " +
+                                                "AND GETDATE() BETWEEN from_date AND to_date " +
+                                                "GROUP BY s.site_id);", conn);
+
+                cmd.Parameters.AddWithValue("@park_id", parkId);
+
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    Site avaliableSite = GetSiteFromReader(reader);
+                    availableSites.Add(avaliableSite);
+                }
+            }
+            return availableSites;
+        }
 
         private Site GetSiteFromReader(SqlDataReader reader)
         {
